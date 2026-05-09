@@ -101,3 +101,6 @@ Other: `help`, `exit`.
 - Rate limiter stores `{ count, firstRequestTime }` per IP. Window expires by comparing `Date.now()` - no real timers.
 - The ring view merges routed requests purely for visualization. The actual hash ring used for routing only ever contains server entries.
 - All state is in-memory. No concurrency handling, per the task constraints.
+<img width="283" height="448" alt="image" src="https://github.com/user-attachments/assets/3b36624d-aca6-4cb2-b0c9-5fbd86c47273" />
+<img width="1428" height="1071" alt="same ip always pointing to same server in consistent hashing" src="https://github.com/user-attachments/assets/946be878-0580-46a5-aeb1-7574cb34614e" />
+
