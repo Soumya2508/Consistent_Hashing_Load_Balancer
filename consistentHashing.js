@@ -151,12 +151,14 @@ function loadBalancerConsistentHashing(ip) {
     return null;
   }
 
+  // Hashed the IP early so failed attempts can still be recorded on the ring view
+  const ipHash = hashKey(ip);
+
   if (hashRing.length === 0) {
-    console.log("No servers available");
+    routedRequests.push({ ip: ip, hashValue: ipHash, routedTo: "(no servers)" });
+    console.log(`Incoming IP: ${ip} -> No servers available`);
     return null;
   }
-
-  const ipHash = hashKey(ip);
 
   // Found the starting index on the ring (first virtual node with hashValue >= ipHash)
   let startIdx = 0;
@@ -194,7 +196,9 @@ function loadBalancerConsistentHashing(ip) {
     }
   }
 
-  console.log("No healthy server available");
+  // Walked the full ring - nothing healthy. Recorded the attempt for the ring view
+  routedRequests.push({ ip: ip, hashValue: ipHash, routedTo: "(no healthy server)" });
+  console.log(`Incoming IP: ${ip} -> No healthy server available`);
   return null;
 }
 
@@ -215,7 +219,7 @@ function simulateTrafficConsistentHashing(count = 10) {
 
 function showHashRing() {
   console.log("\n===== CONSISTENT HASH RING =====");
-  if (hashRing.length === 0) {
+  if (hashRing.length === 0 && routedRequests.length === 0) {
     console.log("(empty)");
     console.log("");
     return;
