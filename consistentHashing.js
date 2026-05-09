@@ -5,6 +5,12 @@ const { identifyNode } = require("./utils");
 let consistentServers = [];
 let hashRing = [];
 
+// Metrics state
+let metrics = {};            // { "Node-A": 12, ... } counts only physical servers
+let totalRequests = 0;
+let blockedRequests = 0;
+let routedRequests = [];     // [{ ip, hashValue, routedTo }] - display overlay only
+
 // Used MD5 and took the first 4 hex chars to keep a readable 16-bit hash space (0 - 65535)
 function hashKey(key) {
   const hash = crypto.createHash("md5").update(key).digest("hex");
@@ -133,6 +139,17 @@ function loadBalancerConsistentHashing(ip) {
     const idx = (startIdx + step) % hashRing.length;
     const entry = hashRing[idx];
     if (isHealthy(entry.actualNode)) {
+      // Updated metrics and recorded the routed request for the ring overlay
+      totalRequests++;
+      if (!metrics[entry.actualNode]) {
+        metrics[entry.actualNode] = 0;
+      }
+      metrics[entry.actualNode]++;
+      routedRequests.push({
+        ip: ip,
+        hashValue: ipHash,
+        routedTo: entry.actualNode
+      });
       identifyNode(ip, entry.actualNode);
       return entry.actualNode;
     }
@@ -155,10 +172,54 @@ function showHashRing() {
     console.log("");
     return;
   }
+
+  // Built a merged display list (server entries + routed requests) sorted by hash
+  // The actual hashRing is never mutated - this overlay is display-only
+  const display = [];
   for (let entry of hashRing) {
-    const tag = isHealthy(entry.actualNode) ? "[HEALTHY]" : "[UNHEALTHY]";
-    console.log(`${entry.hashValue} -> ${entry.virtualNode} ${tag}`);
+    display.push({
+      kind: "SERVER",
+      hashValue: entry.hashValue,
+      virtualNode: entry.virtualNode,
+      actualNode: entry.actualNode
+    });
   }
+  for (let req of routedRequests) {
+    display.push({
+      kind: "REQUEST",
+      hashValue: req.hashValue,
+      ip: req.ip,
+      routedTo: req.routedTo
+    });
+  }
+  display.sort((a, b) => a.hashValue - b.hashValue);
+
+  for (let item of display) {
+    if (item.kind === "SERVER") {
+      const tag = isHealthy(item.actualNode) ? "[HEALTHY]" : "[UNHEALTHY]";
+      console.log(`${item.hashValue} -> [SERVER]  ${item.virtualNode} ${tag}`);
+    } else {
+      console.log(`${item.hashValue} -> [REQUEST] ${item.ip} -> ${item.routedTo}`);
+    }
+  }
+  console.log("");
+}
+
+function showMetricsConsistentHashing() {
+  console.log("\n===== METRICS =====");
+  if (totalRequests === 0) {
+    console.log("(no requests routed yet)");
+    console.log("");
+    return;
+  }
+  for (let server of consistentServers) {
+    const count = metrics[server.name] || 0;
+    const percent = ((count / totalRequests) * 100).toFixed(1);
+    console.log(`${server.name} -> ${count} requests (${percent}%)`);
+  }
+  console.log("");
+  console.log(`Total requests:   ${totalRequests}`);
+  console.log(`Blocked requests: ${blockedRequests}`);
   console.log("");
 }
 
@@ -168,5 +229,6 @@ module.exports = {
   loadBalancerConsistentHashing,
   testRequestConsistentHashing,
   setHealthConsistentHashing,
-  showHashRing
+  showHashRing,
+  showMetricsConsistentHashing
 };

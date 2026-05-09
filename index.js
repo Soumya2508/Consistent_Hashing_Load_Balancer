@@ -22,7 +22,8 @@ Consistent hashing:
   add-consistent <name> [weight] add a server (weight controls virtual node count)
   remove-consistent <name>       remove a server
   test-consistent <ip> [count]   route an IP through consistent hashing
-  ring                           show the hash ring
+  ring                           show the hash ring (with routed requests overlay)
+  metrics                        show per-server request counts and totals
   unhealthy <name>               mark a server as unhealthy
   healthy <name>                 mark a server as healthy again
 
@@ -73,6 +74,10 @@ function handleCommand(line) {
 
     case "ring":
       consistent.showHashRing();
+      break;
+
+    case "metrics":
+      consistent.showMetricsConsistentHashing();
       break;
 
     case "unhealthy":
