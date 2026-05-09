@@ -11,6 +11,37 @@ let totalRequests = 0;
 let blockedRequests = 0;
 let routedRequests = [];     // [{ ip, hashValue, routedTo }] - display overlay only
 
+// Rate limiting state - simple fixed window per IP
+let rateLimitMap = {};       // { ip: { count, firstRequestTime } }
+const RATE_LIMIT_WINDOW_MS = 30 * 1000;  // 30 seconds
+const RATE_LIMIT_MAX = 10;               // max requests per window per IP
+
+// Returned true if the request is allowed, false if it should be blocked
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = rateLimitMap[ip];
+
+  if (!record) {
+    // First time we have seen this IP
+    rateLimitMap[ip] = { count: 1, firstRequestTime: now };
+    return true;
+  }
+
+  if (now - record.firstRequestTime > RATE_LIMIT_WINDOW_MS) {
+    // Old window expired - reset and start fresh
+    record.count = 1;
+    record.firstRequestTime = now;
+    return true;
+  }
+
+  // Still inside the same window
+  record.count++;
+  if (record.count > RATE_LIMIT_MAX) {
+    return false;
+  }
+  return true;
+}
+
 // Used MD5 and took the first 4 hex chars to keep a readable 16-bit hash space (0 - 65535)
 function hashKey(key) {
   const hash = crypto.createHash("md5").update(key).digest("hex");
@@ -112,6 +143,14 @@ function isHealthy(actualNode) {
 }
 
 function loadBalancerConsistentHashing(ip) {
+  // Rate limit check happens before anything else - testRequest just loops,
+  // so calling test-consistent <ip> 12 naturally hits this check on each call
+  if (!checkRateLimit(ip)) {
+    blockedRequests++;
+    console.log(`Rate limit exceeded for IP: ${ip}`);
+    return null;
+  }
+
   if (hashRing.length === 0) {
     console.log("No servers available");
     return null;
