@@ -22,9 +22,40 @@ function addServerConsistentHashing(name, weight) {
   if (!weight || weight < 1) {
     weight = 1;
   }
-  consistentServers.push({ name, weight });
+  // Defaulted healthy to true so a fresh server starts taking traffic immediately
+  consistentServers.push({ name, weight, healthy: true });
   buildHashRing();
   console.log(`Added ${name} (weight ${weight}) to consistent hashing`);
+  showHashRing();
+}
+
+// One internal helper, two REPL commands - keeps the intent explicit
+function setHealthConsistentHashing(name, desiredState) {
+  let target = null;
+  for (let server of consistentServers) {
+    if (server.name === name) {
+      target = server;
+      break;
+    }
+  }
+  if (target === null) {
+    console.log("Server does not exist");
+    return;
+  }
+  if (target.healthy === desiredState) {
+    if (desiredState === false) {
+      console.log("Server already unhealthy");
+    } else {
+      console.log("Server already healthy");
+    }
+    return;
+  }
+  target.healthy = desiredState;
+  if (desiredState === false) {
+    console.log(`${name} marked UNHEALTHY`);
+  } else {
+    console.log(`${name} marked HEALTHY`);
+  }
   showHashRing();
 }
 
@@ -64,6 +95,16 @@ function buildHashRing() {
   hashRing.sort((a, b) => a.hashValue - b.hashValue);
 }
 
+// Looked up the healthy flag for the physical server that owns a virtual node
+function isHealthy(actualNode) {
+  for (let server of consistentServers) {
+    if (server.name === actualNode) {
+      return server.healthy;
+    }
+  }
+  return false;
+}
+
 function loadBalancerConsistentHashing(ip) {
   if (hashRing.length === 0) {
     console.log("No servers available");
@@ -72,19 +113,33 @@ function loadBalancerConsistentHashing(ip) {
 
   const ipHash = hashKey(ip);
 
-  // Picked the first virtual node with hashValue >= ipHash (clockwise)
-  // Returned the actual physical server name, not the virtual node label
-  for (let entry of hashRing) {
-    if (ipHash <= entry.hashValue) {
+  // Found the starting index on the ring (first virtual node with hashValue >= ipHash)
+  let startIdx = 0;
+  let foundStart = false;
+  for (let i = 0; i < hashRing.length; i++) {
+    if (ipHash <= hashRing[i].hashValue) {
+      startIdx = i;
+      foundStart = true;
+      break;
+    }
+  }
+  if (!foundStart) {
+    // Wrapped around to the first virtual node
+    startIdx = 0;
+  }
+
+  // Walked clockwise from startIdx, skipped unhealthy nodes
+  for (let step = 0; step < hashRing.length; step++) {
+    const idx = (startIdx + step) % hashRing.length;
+    const entry = hashRing[idx];
+    if (isHealthy(entry.actualNode)) {
       identifyNode(ip, entry.actualNode);
       return entry.actualNode;
     }
   }
 
-  // Wrapped around to the first virtual node in the ring
-  const first = hashRing[0];
-  identifyNode(ip, first.actualNode);
-  return first.actualNode;
+  console.log("No healthy server available");
+  return null;
 }
 
 function testRequestConsistentHashing(ip, count = 1) {
@@ -101,7 +156,8 @@ function showHashRing() {
     return;
   }
   for (let entry of hashRing) {
-    console.log(`${entry.hashValue} -> ${entry.virtualNode}`);
+    const tag = isHealthy(entry.actualNode) ? "[HEALTHY]" : "[UNHEALTHY]";
+    console.log(`${entry.hashValue} -> ${entry.virtualNode} ${tag}`);
   }
   console.log("");
 }
@@ -111,5 +167,6 @@ module.exports = {
   removeServerConsistentHashing,
   loadBalancerConsistentHashing,
   testRequestConsistentHashing,
+  setHealthConsistentHashing,
   showHashRing
 };

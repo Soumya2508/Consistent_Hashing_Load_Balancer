@@ -23,6 +23,8 @@ Consistent hashing:
   remove-consistent <name>       remove a server
   test-consistent <ip> [count]   route an IP through consistent hashing
   ring                           show the hash ring
+  unhealthy <name>               mark a server as unhealthy
+  healthy <name>                 mark a server as healthy again
 
 Other:
   help                           show this help
@@ -71,6 +73,16 @@ function handleCommand(line) {
 
     case "ring":
       consistent.showHashRing();
+      break;
+
+    case "unhealthy":
+      if (parts.length < 2) { console.log("Usage: unhealthy <name>"); break; }
+      consistent.setHealthConsistentHashing(parts[1], false);
+      break;
+
+    case "healthy":
+      if (parts.length < 2) { console.log("Usage: healthy <name>"); break; }
+      consistent.setHealthConsistentHashing(parts[1], true);
       break;
 
     case "help":
