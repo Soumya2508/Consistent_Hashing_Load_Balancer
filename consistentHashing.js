@@ -63,7 +63,6 @@ function addServerConsistentHashing(name, weight) {
   consistentServers.push({ name, weight, healthy: true });
   buildHashRing();
   console.log(`Added ${name} (weight ${weight}) to consistent hashing`);
-  showHashRing();
 }
 
 // One internal helper, two REPL commands - keeps the intent explicit
@@ -93,7 +92,6 @@ function setHealthConsistentHashing(name, desiredState) {
   } else {
     console.log(`${name} marked HEALTHY`);
   }
-  showHashRing();
 }
 
 function removeServerConsistentHashing(name) {
@@ -111,7 +109,6 @@ function removeServerConsistentHashing(name) {
   consistentServers.splice(foundIdx, 1);
   buildHashRing();
   console.log(`Removed ${name} from consistent hashing`);
-  showHashRing();
 }
 
 // Rebuilt the ring after every server add or remove
