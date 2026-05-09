@@ -1,0 +1,103 @@
+const readline = require("readline");
+const random = require("./randomRouting");
+const consistent = require("./consistentHashing");
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: "> "
+});
+
+function printHelp() {
+  console.log(`
+===== AVAILABLE COMMANDS =====
+
+Random routing:
+  add-random <name>              add a server
+  remove-random <name>           remove a server
+  test-random <ip> [count]       route an IP through the random load balancer
+  show-random                    show servers and stored requests
+
+Consistent hashing:
+  add-consistent <name>          add a server
+  remove-consistent <name>       remove a server
+  test-consistent <ip> [count]   route an IP through consistent hashing
+  ring                           show the hash ring
+
+Other:
+  help                           show this help
+  exit                           quit
+`);
+}
+
+function handleCommand(line) {
+  const parts = line.trim().split(/\s+/);
+  const cmd = parts[0];
+
+  switch (cmd) {
+    case "add-random":
+      if (parts.length < 2) { console.log("Usage: add-random <name>"); break; }
+      random.addServerRandomRouting(parts[1]);
+      break;
+
+    case "remove-random":
+      if (parts.length < 2) { console.log("Usage: remove-random <name>"); break; }
+      random.removeServerRandomRouting(parts[1]);
+      break;
+
+    case "test-random":
+      if (parts.length < 2) { console.log("Usage: test-random <ip> [count]"); break; }
+      random.testRequestRandomRouting(parts[1], parts[2] ? parseInt(parts[2]) : 1);
+      break;
+
+    case "show-random":
+      random.showServersRandomRouting();
+      break;
+
+    case "add-consistent":
+      if (parts.length < 2) { console.log("Usage: add-consistent <name>"); break; }
+      consistent.addServerConsistentHashing(parts[1]);
+      break;
+
+    case "remove-consistent":
+      if (parts.length < 2) { console.log("Usage: remove-consistent <name>"); break; }
+      consistent.removeServerConsistentHashing(parts[1]);
+      break;
+
+    case "test-consistent":
+      if (parts.length < 2) { console.log("Usage: test-consistent <ip> [count]"); break; }
+      consistent.testRequestConsistentHashing(parts[1], parts[2] ? parseInt(parts[2]) : 1);
+      break;
+
+    case "ring":
+      consistent.showHashRing();
+      break;
+
+    case "help":
+      printHelp();
+      break;
+
+    case "exit":
+      rl.close();
+      return;
+
+    case "":
+      break;
+
+    default:
+      console.log(`Unknown command: ${cmd}. Type 'help' for the list.`);
+  }
+}
+
+console.log("Load Balancer CLI - type 'help' for commands");
+rl.prompt();
+
+rl.on("line", (line) => {
+  handleCommand(line);
+  rl.prompt();
+});
+
+rl.on("close", () => {
+  console.log("Bye!");
+  process.exit(0);
+});

@@ -1,0 +1,11 @@
+{
+  "name": "consistent-hashing-load-balancer",
+  "version": "1.0.0",
+  "description": "Load balancer simulation with random routing baseline and consistent hashing redesign",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Soumya",
+  "license": "ISC"
+}
