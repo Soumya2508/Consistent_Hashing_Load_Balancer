@@ -16,12 +16,14 @@ Random routing:
   add-random <name>              add a server
   remove-random <name>           remove a server
   test-random <ip> [count]       route an IP through the random load balancer
+  simulate-random <count>        generate <count> random IPs and route each
   show-random                    show servers and stored requests
 
 Consistent hashing:
   add-consistent <name> [weight] add a server (weight controls virtual node count)
   remove-consistent <name>       remove a server
   test-consistent <ip> [count]   route an IP through consistent hashing
+  simulate-consistent <count>    generate <count> random IPs and route each
   ring                           show the hash ring (with routed requests overlay)
   metrics                        show per-server request counts and totals
   unhealthy <name>               mark a server as unhealthy
@@ -57,6 +59,11 @@ function handleCommand(line) {
       random.showServersRandomRouting();
       break;
 
+    case "simulate-random":
+      if (parts.length < 2) { console.log("Usage: simulate-random <count>"); break; }
+      random.simulateTrafficRandom(parseInt(parts[1]));
+      break;
+
     case "add-consistent":
       if (parts.length < 2) { console.log("Usage: add-consistent <name> [weight]"); break; }
       consistent.addServerConsistentHashing(parts[1], parts[2] ? parseInt(parts[2]) : 1);
@@ -70,6 +77,11 @@ function handleCommand(line) {
     case "test-consistent":
       if (parts.length < 2) { console.log("Usage: test-consistent <ip> [count]"); break; }
       consistent.testRequestConsistentHashing(parts[1], parts[2] ? parseInt(parts[2]) : 1);
+      break;
+
+    case "simulate-consistent":
+      if (parts.length < 2) { console.log("Usage: simulate-consistent <count>"); break; }
+      consistent.simulateTrafficConsistentHashing(parseInt(parts[1]));
       break;
 
     case "ring":

@@ -1,4 +1,4 @@
-const { identifyNode } = require("./utils");
+const { identifyNode, generateRandomIP } = require("./utils");
 
 // Random routing state - intentionally bare for the baseline comparison
 let randomServers = [];
@@ -63,6 +63,15 @@ function testRequestRandomRouting(ip, count = 1) {
   }
 }
 
+// Generated count random IPs and routed each through the load balancer
+// Mirrors simulateTraffic from the original task PDF
+function simulateTrafficRandom(count = 10) {
+  for (let i = 0; i < count; i++) {
+    const ip = generateRandomIP();
+    loadBalancerRandomRouting(ip);
+  }
+}
+
 function showServersRandomRouting() {
   console.log("\n===== RANDOM ROUTING SERVERS =====");
   if (randomServers.length === 0) {
@@ -85,5 +94,6 @@ module.exports = {
   removeServerRandomRouting,
   loadBalancerRandomRouting,
   testRequestRandomRouting,
+  simulateTrafficRandom,
   showServersRandomRouting
 };

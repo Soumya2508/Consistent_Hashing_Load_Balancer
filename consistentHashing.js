@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { identifyNode } = require("./utils");
+const { identifyNode, generateRandomIP } = require("./utils");
 
 // Consistent hashing state
 let consistentServers = [];
@@ -204,6 +204,15 @@ function testRequestConsistentHashing(ip, count = 1) {
   }
 }
 
+// Generated count random IPs and routed each through consistent hashing
+// Mirrors simulateTraffic from the original task PDF
+function simulateTrafficConsistentHashing(count = 10) {
+  for (let i = 0; i < count; i++) {
+    const ip = generateRandomIP();
+    loadBalancerConsistentHashing(ip);
+  }
+}
+
 function showHashRing() {
   console.log("\n===== CONSISTENT HASH RING =====");
   if (hashRing.length === 0) {
@@ -267,6 +276,7 @@ module.exports = {
   removeServerConsistentHashing,
   loadBalancerConsistentHashing,
   testRequestConsistentHashing,
+  simulateTrafficConsistentHashing,
   setHealthConsistentHashing,
   showHashRing,
   showMetricsConsistentHashing

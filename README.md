@@ -43,6 +43,7 @@ Random routing:
 | `add-random <name>` | add a server |
 | `remove-random <name>` | remove a server |
 | `test-random <ip> [count]` | route an IP through the random load balancer |
+| `simulate-random <count>` | generate `count` random IPs and route each (mirrors the PDF's `simulateTraffic`) |
 | `show-random` | list servers and the unique IPs ever requested |
 
 Consistent hashing:
@@ -52,6 +53,7 @@ Consistent hashing:
 | `add-consistent <name> [weight]` | add a server (weight defaults to 1) |
 | `remove-consistent <name>` | remove a server |
 | `test-consistent <ip> [count]` | route an IP through consistent hashing |
+| `simulate-consistent <count>` | generate `count` random IPs and route each |
 | `ring` | show the hash ring with routed requests overlaid |
 | `metrics` | per-server counts, percentages, totals, blocked count |
 | `unhealthy <name>` | mark a server unhealthy |
