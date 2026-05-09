@@ -50,39 +50,78 @@ function handleCommand(line) {
       random.removeServerRandomRouting(parts[1]);
       break;
 
-    case "test-random":
+    case "test-random": {
       if (parts.length < 2) { console.log("Usage: test-random <ip> [count]"); break; }
-      random.testRequestRandomRouting(parts[1], parts[2] ? parseInt(parts[2]) : 1);
+      let count = 1;
+      if (parts[2]) {
+        count = parseInt(parts[2]);
+        if (Number.isNaN(count) || count <= 0) {
+          console.log("count must be a positive integer (e.g. test-random 1.1.1.1 5)");
+          break;
+        }
+      }
+      random.testRequestRandomRouting(parts[1], count);
       break;
+    }
 
     case "show-random":
       random.showServersRandomRouting();
       break;
 
-    case "simulate-random":
+    case "simulate-random": {
       if (parts.length < 2) { console.log("Usage: simulate-random <count>"); break; }
-      random.simulateTrafficRandom(parseInt(parts[1]));
+      const count = parseInt(parts[1]);
+      if (Number.isNaN(count) || count <= 0) {
+        console.log("count must be a positive integer (e.g. simulate-random 10)");
+        break;
+      }
+      random.simulateTrafficRandom(count);
       break;
+    }
 
-    case "add-consistent":
+    case "add-consistent": {
       if (parts.length < 2) { console.log("Usage: add-consistent <name> [weight]"); break; }
-      consistent.addServerConsistentHashing(parts[1], parts[2] ? parseInt(parts[2]) : 1);
+      let weight = 1;
+      if (parts[2]) {
+        weight = parseInt(parts[2]);
+        if (Number.isNaN(weight) || weight <= 0) {
+          console.log("weight must be a positive integer (e.g. add-consistent Node-A 3)");
+          break;
+        }
+      }
+      consistent.addServerConsistentHashing(parts[1], weight);
       break;
+    }
 
     case "remove-consistent":
       if (parts.length < 2) { console.log("Usage: remove-consistent <name>"); break; }
       consistent.removeServerConsistentHashing(parts[1]);
       break;
 
-    case "test-consistent":
+    case "test-consistent": {
       if (parts.length < 2) { console.log("Usage: test-consistent <ip> [count]"); break; }
-      consistent.testRequestConsistentHashing(parts[1], parts[2] ? parseInt(parts[2]) : 1);
+      let count = 1;
+      if (parts[2]) {
+        count = parseInt(parts[2]);
+        if (Number.isNaN(count) || count <= 0) {
+          console.log("count must be a positive integer (e.g. test-consistent 1.1.1.1 5)");
+          break;
+        }
+      }
+      consistent.testRequestConsistentHashing(parts[1], count);
       break;
+    }
 
-    case "simulate-consistent":
+    case "simulate-consistent": {
       if (parts.length < 2) { console.log("Usage: simulate-consistent <count>"); break; }
-      consistent.simulateTrafficConsistentHashing(parseInt(parts[1]));
+      const count = parseInt(parts[1]);
+      if (Number.isNaN(count) || count <= 0) {
+        console.log("count must be a positive integer (e.g. simulate-consistent 10)");
+        break;
+      }
+      consistent.simulateTrafficConsistentHashing(count);
       break;
+    }
 
     case "ring":
       consistent.showHashRing();
