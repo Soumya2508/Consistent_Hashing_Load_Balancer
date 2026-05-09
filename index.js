@@ -19,7 +19,7 @@ Random routing:
   show-random                    show servers and stored requests
 
 Consistent hashing:
-  add-consistent <name>          add a server
+  add-consistent <name> [weight] add a server (weight controls virtual node count)
   remove-consistent <name>       remove a server
   test-consistent <ip> [count]   route an IP through consistent hashing
   ring                           show the hash ring
@@ -55,8 +55,8 @@ function handleCommand(line) {
       break;
 
     case "add-consistent":
-      if (parts.length < 2) { console.log("Usage: add-consistent <name>"); break; }
-      consistent.addServerConsistentHashing(parts[1]);
+      if (parts.length < 2) { console.log("Usage: add-consistent <name> [weight]"); break; }
+      consistent.addServerConsistentHashing(parts[1], parts[2] ? parseInt(parts[2]) : 1);
       break;
 
     case "remove-consistent":

@@ -11,16 +11,20 @@ function hashKey(key) {
   return parseInt(hash.substring(0, 4), 16);
 }
 
-function addServerConsistentHashing(name) {
+function addServerConsistentHashing(name, weight) {
   for (let server of consistentServers) {
     if (server.name === name) {
       console.log("Server already exists");
       return;
     }
   }
-  consistentServers.push({ name });
+  // Defaulted weight to 1 so a missing weight still works
+  if (!weight || weight < 1) {
+    weight = 1;
+  }
+  consistentServers.push({ name, weight });
   buildHashRing();
-  console.log(`Added ${name} to consistent hashing`);
+  console.log(`Added ${name} (weight ${weight}) to consistent hashing`);
   showHashRing();
 }
 
@@ -43,13 +47,18 @@ function removeServerConsistentHashing(name) {
 }
 
 // Rebuilt the ring after every server add or remove
+// Each server gets `weight` virtual nodes spread across the ring for better balance
 function buildHashRing() {
   hashRing = [];
   for (let server of consistentServers) {
-    hashRing.push({
-      node: server.name,
-      hashValue: hashKey(server.name)
-    });
+    for (let i = 0; i < server.weight; i++) {
+      const virtualNode = `${server.name}#${i}`;
+      hashRing.push({
+        virtualNode: virtualNode,
+        actualNode: server.name,
+        hashValue: hashKey(virtualNode)
+      });
+    }
   }
   // Sorted ascending so we can walk clockwise
   hashRing.sort((a, b) => a.hashValue - b.hashValue);
@@ -63,18 +72,19 @@ function loadBalancerConsistentHashing(ip) {
 
   const ipHash = hashKey(ip);
 
-  // Picked the first server with hashValue >= ipHash (clockwise)
+  // Picked the first virtual node with hashValue >= ipHash (clockwise)
+  // Returned the actual physical server name, not the virtual node label
   for (let entry of hashRing) {
     if (ipHash <= entry.hashValue) {
-      identifyNode(ip, entry.node);
-      return entry.node;
+      identifyNode(ip, entry.actualNode);
+      return entry.actualNode;
     }
   }
 
-  // Wrapped around to the first server in the ring
+  // Wrapped around to the first virtual node in the ring
   const first = hashRing[0];
-  identifyNode(ip, first.node);
-  return first.node;
+  identifyNode(ip, first.actualNode);
+  return first.actualNode;
 }
 
 function testRequestConsistentHashing(ip, count = 1) {
@@ -91,7 +101,7 @@ function showHashRing() {
     return;
   }
   for (let entry of hashRing) {
-    console.log(`${entry.hashValue} -> ${entry.node}`);
+    console.log(`${entry.hashValue} -> ${entry.virtualNode}`);
   }
   console.log("");
 }
