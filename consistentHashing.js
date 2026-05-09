@@ -179,10 +179,21 @@ function loadBalancerConsistentHashing(ip) {
     return null;
   }
 
-  // Hashed the IP and stored the request - the actual destination is computed
-  // at display time so it stays current as servers are added or marked unhealthy
+  // Hashed the IP and stored unique IPs only - the same IP retried many times
+  // is the same hash, same destination - no point listing it again in metrics.
+  // Destination is computed at display time so it stays current as servers
+  // are added or marked unhealthy.
   const ipHash = hashKey(ip);
-  routedRequests.push({ ip: ip, hashValue: ipHash });
+  let alreadyStored = false;
+  for (let req of routedRequests) {
+    if (req.ip === ip) {
+      alreadyStored = true;
+      break;
+    }
+  }
+  if (!alreadyStored) {
+    routedRequests.push({ ip: ip, hashValue: ipHash });
+  }
 
   const target = findRouteForHash(ipHash);
   if (target === null) {
