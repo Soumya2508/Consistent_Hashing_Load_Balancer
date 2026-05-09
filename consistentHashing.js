@@ -6,10 +6,10 @@ let consistentServers = [];
 let hashRing = [];
 
 // Metrics state
-let metrics = {};            // { "Node-A": 12, ... } counts only physical servers
-let totalRequests = 0;
+// routedRequests stores just the IP and its hash. The actual destination is
+// recomputed at display time so add/remove/health changes update the view.
+let routedRequests = [];     // [{ ip, hashValue }]
 let blockedRequests = 0;
-let routedRequests = [];     // [{ ip, hashValue, routedTo }] - display overlay only
 
 // Rate limiting state - simple fixed window per IP
 let rateLimitMap = {};       // { ip: { count, firstRequestTime } }
@@ -142,25 +142,13 @@ function isHealthy(actualNode) {
   return false;
 }
 
-function loadBalancerConsistentHashing(ip) {
-  // Rate limit check happens before anything else - testRequest just loops,
-  // so calling test-consistent <ip> 12 naturally hits this check on each call
-  if (!checkRateLimit(ip)) {
-    blockedRequests++;
-    console.log(`Rate limit exceeded for IP: ${ip}`);
-    return null;
-  }
-
-  // Hashed the IP early so failed attempts can still be recorded on the ring view
-  const ipHash = hashKey(ip);
-
+// Walked the ring clockwise from ipHash and returned the first healthy server name
+// Returned null if the ring is empty or no healthy server exists
+function findRouteForHash(ipHash) {
   if (hashRing.length === 0) {
-    routedRequests.push({ ip: ip, hashValue: ipHash, routedTo: "(no servers)" });
-    console.log(`Incoming IP: ${ip} -> No servers available`);
     return null;
   }
 
-  // Found the starting index on the ring (first virtual node with hashValue >= ipHash)
   let startIdx = 0;
   let foundStart = false;
   for (let i = 0; i < hashRing.length; i++) {
@@ -175,31 +163,42 @@ function loadBalancerConsistentHashing(ip) {
     startIdx = 0;
   }
 
-  // Walked clockwise from startIdx, skipped unhealthy nodes
   for (let step = 0; step < hashRing.length; step++) {
     const idx = (startIdx + step) % hashRing.length;
     const entry = hashRing[idx];
     if (isHealthy(entry.actualNode)) {
-      // Updated metrics and recorded the routed request for the ring overlay
-      totalRequests++;
-      if (!metrics[entry.actualNode]) {
-        metrics[entry.actualNode] = 0;
-      }
-      metrics[entry.actualNode]++;
-      routedRequests.push({
-        ip: ip,
-        hashValue: ipHash,
-        routedTo: entry.actualNode
-      });
-      identifyNode(ip, entry.actualNode);
       return entry.actualNode;
     }
   }
-
-  // Walked the full ring - nothing healthy. Recorded the attempt for the ring view
-  routedRequests.push({ ip: ip, hashValue: ipHash, routedTo: "(no healthy server)" });
-  console.log(`Incoming IP: ${ip} -> No healthy server available`);
   return null;
+}
+
+function loadBalancerConsistentHashing(ip) {
+  // Rate limit check happens before anything else - testRequest just loops,
+  // so calling test-consistent <ip> 12 naturally hits this check on each call
+  if (!checkRateLimit(ip)) {
+    blockedRequests++;
+    console.log(`Rate limit exceeded for IP: ${ip}`);
+    return null;
+  }
+
+  // Hashed the IP and stored the request - the actual destination is computed
+  // at display time so it stays current as servers are added or marked unhealthy
+  const ipHash = hashKey(ip);
+  routedRequests.push({ ip: ip, hashValue: ipHash });
+
+  const target = findRouteForHash(ipHash);
+  if (target === null) {
+    if (hashRing.length === 0) {
+      console.log(`Incoming IP: ${ip} -> No servers available`);
+    } else {
+      console.log(`Incoming IP: ${ip} -> No healthy server available`);
+    }
+    return null;
+  }
+
+  identifyNode(ip, target);
+  return target;
 }
 
 function testRequestConsistentHashing(ip, count = 1) {
@@ -237,11 +236,16 @@ function showHashRing() {
     });
   }
   for (let req of routedRequests) {
+    // Recomputed where this request would route given the current ring state
+    let routeNow = findRouteForHash(req.hashValue);
+    if (routeNow === null) {
+      routeNow = (hashRing.length === 0) ? "(no servers)" : "(no healthy server)";
+    }
     display.push({
       kind: "REQUEST",
       hashValue: req.hashValue,
       ip: req.ip,
-      routedTo: req.routedTo
+      routedTo: routeNow
     });
   }
   display.sort((a, b) => a.hashValue - b.hashValue);
@@ -259,19 +263,58 @@ function showHashRing() {
 
 function showMetricsConsistentHashing() {
   console.log("\n===== METRICS =====");
-  if (totalRequests === 0) {
-    console.log("(no requests routed yet)");
-    console.log("");
-    return;
+
+  // Servers
+  console.log("\nServers:");
+  if (consistentServers.length === 0) {
+    console.log("  (none)");
+  } else {
+    for (let server of consistentServers) {
+      const status = server.healthy ? "HEALTHY" : "UNHEALTHY";
+      console.log(`  ${server.name} (weight ${server.weight}, ${status})`);
+    }
   }
-  for (let server of consistentServers) {
-    const count = metrics[server.name] || 0;
-    const percent = ((count / totalRequests) * 100).toFixed(1);
-    console.log(`${server.name} -> ${count} requests (${percent}%)`);
+
+  // Stored requests with their current routing
+  console.log(`\nStored requests (${routedRequests.length}):`);
+  if (routedRequests.length === 0) {
+    console.log("  (none)");
+  } else {
+    for (let req of routedRequests) {
+      let routeNow = findRouteForHash(req.hashValue);
+      if (routeNow === null) {
+        routeNow = (hashRing.length === 0) ? "(no servers)" : "(no healthy server)";
+      }
+      console.log(`  ${req.ip} -> ${routeNow}`);
+    }
   }
-  console.log("");
-  console.log(`Total requests:   ${totalRequests}`);
-  console.log(`Blocked requests: ${blockedRequests}`);
+
+  // Distribution computed dynamically from the current ring
+  const distribution = {};
+  let routedCount = 0;
+  for (let req of routedRequests) {
+    const target = findRouteForHash(req.hashValue);
+    if (target !== null) {
+      if (!distribution[target]) {
+        distribution[target] = 0;
+      }
+      distribution[target]++;
+      routedCount++;
+    }
+  }
+
+  console.log("\nCurrent distribution:");
+  if (routedCount === 0) {
+    console.log("  (no requests currently routable)");
+  } else {
+    for (let server of consistentServers) {
+      const count = distribution[server.name] || 0;
+      const percent = ((count / routedCount) * 100).toFixed(1);
+      console.log(`  ${server.name} -> ${count} requests (${percent}%)`);
+    }
+  }
+
+  console.log(`\nBlocked by rate limit: ${blockedRequests}`);
   console.log("");
 }
 
