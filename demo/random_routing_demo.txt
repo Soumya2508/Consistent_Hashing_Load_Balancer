@@ -1,0 +1,37 @@
+Load Balancer CLI - type 'help' for commands
+> Incoming IP: 220.255.93.35 -> No servers available
+Incoming IP: 90.157.31.158 -> No servers available
+Incoming IP: 147.223.99.228 -> No servers available
+Incoming IP: 154.146.141.139 -> No servers available
+Incoming IP: 1.126.159.23 -> No servers available
+> Added Node-A to random routing
+> Added Node-B to random routing
+> Added Node-C to random routing
+> Incoming IP: 205.136.169.31 -> Routed to: Node-A
+Incoming IP: 221.104.191.1 -> Routed to: Node-C
+Incoming IP: 123.43.64.24 -> Routed to: Node-B
+Incoming IP: 15.197.157.114 -> Routed to: Node-B
+Incoming IP: 250.15.102.21 -> Routed to: Node-C
+Incoming IP: 252.56.194.190 -> Routed to: Node-B
+Incoming IP: 29.213.169.62 -> Routed to: Node-B
+Incoming IP: 73.131.66.232 -> Routed to: Node-A
+> 
+===== RANDOM ROUTING SERVERS =====
+Node-A, Node-B, Node-C
+
+===== ROUTED REQUESTS =====
+220.255.93.35, 90.157.31.158, 147.223.99.228, 154.146.141.139, 1.126.159.23, 205.136.169.31, 221.104.191.1, 123.43.64.24, 15.197.157.114, 250.15.102.21, 252.56.194.190, 29.213.169.62, 73.131.66.232
+
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> Incoming IP: 192.168.1.1 -> Routed to: Node-A
+> Incoming IP: 192.168.1.1 -> Routed to: Node-C
+> Incoming IP: 192.168.1.1 -> Routed to: Node-C
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> 
+===== RANDOM ROUTING SERVERS =====
+Node-A, Node-B, Node-C
+
+===== ROUTED REQUESTS =====
+220.255.93.35, 90.157.31.158, 147.223.99.228, 154.146.141.139, 1.126.159.23, 205.136.169.31, 221.104.191.1, 123.43.64.24, 15.197.157.114, 250.15.102.21, 252.56.194.190, 29.213.169.62, 73.131.66.232, 192.168.1.1
+
+> Bye!

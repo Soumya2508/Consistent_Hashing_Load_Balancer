@@ -1,0 +1,193 @@
+Load Balancer CLI - type 'help' for commands
+> Incoming IP: 6.35.71.35 -> No servers available
+Incoming IP: 106.154.156.192 -> No servers available
+Incoming IP: 245.101.83.51 -> No servers available
+Incoming IP: 54.76.102.66 -> No servers available
+Incoming IP: 1.160.252.237 -> No servers available
+> Added Node-A (weight 2) to consistent hashing
+> Added Node-B (weight 3) to consistent hashing
+> Added Node-C (weight 2) to consistent hashing
+> 
+===== CONSISTENT HASH RING =====
+2615 -> [REQUEST] 245.101.83.51 -> Node-C
+7434 -> [REQUEST] 54.76.102.66 -> Node-C
+11790 -> [SERVER]  Node-C#1 [HEALTHY]
+16545 -> [SERVER]  Node-B#2 [HEALTHY]
+19460 -> [SERVER]  Node-A#0 [HEALTHY]
+21258 -> [SERVER]  Node-C#0 [HEALTHY]
+23417 -> [REQUEST] 6.35.71.35 -> Node-B
+31884 -> [SERVER]  Node-B#1 [HEALTHY]
+32184 -> [REQUEST] 1.160.252.237 -> Node-A
+42766 -> [REQUEST] 106.154.156.192 -> Node-A
+62060 -> [SERVER]  Node-A#1 [HEALTHY]
+65445 -> [SERVER]  Node-B#0 [HEALTHY]
+
+> Incoming IP: 36.147.50.165 -> Routed to: Node-B
+Incoming IP: 174.127.143.246 -> Routed to: Node-C
+Incoming IP: 73.144.140.124 -> Routed to: Node-A
+Incoming IP: 126.250.100.172 -> Routed to: Node-B
+Incoming IP: 36.250.249.81 -> Routed to: Node-C
+Incoming IP: 165.132.72.142 -> Routed to: Node-C
+Incoming IP: 16.105.8.121 -> Routed to: Node-A
+Incoming IP: 0.141.198.153 -> Routed to: Node-B
+Incoming IP: 80.123.9.133 -> Routed to: Node-C
+Incoming IP: 92.233.132.109 -> Routed to: Node-A
+> 
+===== METRICS =====
+
+Servers:
+  Node-A (weight 2, HEALTHY)
+  Node-B (weight 3, HEALTHY)
+  Node-C (weight 2, HEALTHY)
+
+Stored requests (15):
+  6.35.71.35 -> Node-B
+  106.154.156.192 -> Node-A
+  245.101.83.51 -> Node-C
+  54.76.102.66 -> Node-C
+  1.160.252.237 -> Node-A
+  36.147.50.165 -> Node-B
+  174.127.143.246 -> Node-C
+  73.144.140.124 -> Node-A
+  126.250.100.172 -> Node-B
+  36.250.249.81 -> Node-C
+  165.132.72.142 -> Node-C
+  16.105.8.121 -> Node-A
+  0.141.198.153 -> Node-B
+  80.123.9.133 -> Node-C
+  92.233.132.109 -> Node-A
+
+Current distribution:
+  Node-A -> 5 requests (33.3%)
+  Node-B -> 4 requests (26.7%)
+  Node-C -> 6 requests (40.0%)
+
+Blocked by rate limit: 0
+
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> Incoming IP: 192.168.1.1 -> Routed to: Node-B
+> Added Node-D (weight 2) to consistent hashing
+> 
+===== METRICS =====
+
+Servers:
+  Node-A (weight 2, HEALTHY)
+  Node-B (weight 3, HEALTHY)
+  Node-C (weight 2, HEALTHY)
+  Node-D (weight 2, HEALTHY)
+
+Stored requests (16):
+  6.35.71.35 -> Node-D
+  106.154.156.192 -> Node-D
+  245.101.83.51 -> Node-C
+  54.76.102.66 -> Node-C
+  1.160.252.237 -> Node-D
+  36.147.50.165 -> Node-B
+  174.127.143.246 -> Node-C
+  73.144.140.124 -> Node-D
+  126.250.100.172 -> Node-B
+  36.250.249.81 -> Node-C
+  165.132.72.142 -> Node-C
+  16.105.8.121 -> Node-A
+  0.141.198.153 -> Node-D
+  80.123.9.133 -> Node-C
+  92.233.132.109 -> Node-A
+  192.168.1.1 -> Node-D
+
+Current distribution:
+  Node-A -> 2 requests (12.5%)
+  Node-B -> 2 requests (12.5%)
+  Node-C -> 6 requests (37.5%)
+  Node-D -> 6 requests (37.5%)
+
+Blocked by rate limit: 0
+
+> Node-A marked UNHEALTHY
+> 
+===== METRICS =====
+
+Servers:
+  Node-A (weight 2, UNHEALTHY)
+  Node-B (weight 3, HEALTHY)
+  Node-C (weight 2, HEALTHY)
+  Node-D (weight 2, HEALTHY)
+
+Stored requests (16):
+  6.35.71.35 -> Node-D
+  106.154.156.192 -> Node-D
+  245.101.83.51 -> Node-C
+  54.76.102.66 -> Node-C
+  1.160.252.237 -> Node-D
+  36.147.50.165 -> Node-B
+  174.127.143.246 -> Node-C
+  73.144.140.124 -> Node-D
+  126.250.100.172 -> Node-B
+  36.250.249.81 -> Node-C
+  165.132.72.142 -> Node-C
+  16.105.8.121 -> Node-B
+  0.141.198.153 -> Node-D
+  80.123.9.133 -> Node-C
+  92.233.132.109 -> Node-B
+  192.168.1.1 -> Node-D
+
+Current distribution:
+  Node-A -> 0 requests (0.0%)
+  Node-B -> 4 requests (25.0%)
+  Node-C -> 6 requests (37.5%)
+  Node-D -> 6 requests (37.5%)
+
+Blocked by rate limit: 0
+
+> Node-A marked HEALTHY
+> Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Incoming IP: 7.7.7.7 -> Routed to: Node-B
+Rate limit exceeded for IP: 7.7.7.7
+Rate limit exceeded for IP: 7.7.7.7
+> 
+===== METRICS =====
+
+Servers:
+  Node-A (weight 2, HEALTHY)
+  Node-B (weight 3, HEALTHY)
+  Node-C (weight 2, HEALTHY)
+  Node-D (weight 2, HEALTHY)
+
+Stored requests (17):
+  6.35.71.35 -> Node-D
+  106.154.156.192 -> Node-D
+  245.101.83.51 -> Node-C
+  54.76.102.66 -> Node-C
+  1.160.252.237 -> Node-D
+  36.147.50.165 -> Node-B
+  174.127.143.246 -> Node-C
+  73.144.140.124 -> Node-D
+  126.250.100.172 -> Node-B
+  36.250.249.81 -> Node-C
+  165.132.72.142 -> Node-C
+  16.105.8.121 -> Node-A
+  0.141.198.153 -> Node-D
+  80.123.9.133 -> Node-C
+  92.233.132.109 -> Node-A
+  192.168.1.1 -> Node-D
+  7.7.7.7 -> Node-B
+
+Current distribution:
+  Node-A -> 2 requests (11.8%)
+  Node-B -> 3 requests (17.6%)
+  Node-C -> 6 requests (35.3%)
+  Node-D -> 6 requests (35.3%)
+
+Blocked by rate limit: 2
+
+> Bye!
