@@ -33,15 +33,7 @@ function removeServerRandomRouting(name) {
 
 // The naive load balancer from the original task PDF
 function loadBalancerRandomRouting(ip) {
-  if (randomServers.length === 0) {
-    console.log("No servers available");
-    return null;
-  }
-  // Picked a random server every call - same IP can land on different servers
-  const randomIndex = Math.floor(Math.random() * randomServers.length);
-  const selectedNode = randomServers[randomIndex];
-
-  // Stored unique IPs only - just for displaying the request set later
+  // Stored unique IPs first - the request did arrive even if we cannot route it
   let alreadySeen = false;
   for (let req of randomRequests) {
     if (req === ip) {
@@ -52,6 +44,15 @@ function loadBalancerRandomRouting(ip) {
   if (!alreadySeen) {
     randomRequests.push(ip);
   }
+
+  if (randomServers.length === 0) {
+    console.log(`Incoming IP: ${ip} -> No servers available`);
+    return null;
+  }
+
+  // Picked a random server every call - same IP can land on different servers
+  const randomIndex = Math.floor(Math.random() * randomServers.length);
+  const selectedNode = randomServers[randomIndex];
 
   identifyNode(ip, selectedNode);
   return selectedNode;
